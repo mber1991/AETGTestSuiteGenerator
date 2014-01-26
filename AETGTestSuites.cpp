@@ -44,8 +44,10 @@ void fetchInput(int &factor, int &level)
 */
 void generateAllTouples(int factor,int level,int** touplesTable)
 {
-	//Create a 2 Dimensional Pointer array that will hold indexes for each Level in a factor
+	int toupleIndex = 0; // Keep track of where I am in the touple array as im assigning numbers
 	int** indexesTable = new int*[factor];
+
+	//Create a 2 Dimensional Pointer array that will hold indexes for each Level in a factor
 	for (int s=0; s<factor; s++)
 		indexesTable[s] = new int[level];
 
@@ -61,10 +63,17 @@ void generateAllTouples(int factor,int level,int** touplesTable)
 	{
 		for (int s=0; s<level; s++) //Step through each level in that factor
 		{
-			for (int j=0; j<level*(factor-(i+1)); j++) //Step through each level in the factors to the right of the current level
+			for (int k=i+1; k<factor; k++) //Step through each factor to the right of the current factor
 			{
-				
+				for (int j=0; j<level; j++) //Step through each level in the factors to the right of the current level
+				{
+					//Assign our combinations to our touplesTable for each entry index 0 and 1 are the two numbers
+					touplesTable[toupleIndex][0] = indexesTable[i][s];
+					touplesTable[toupleIndex][1] = indexesTable[k][j];
+					toupleIndex++;
+				}
 			}
+			cout << endl;
 		}
 	}
 	delete [] indexesTable;
