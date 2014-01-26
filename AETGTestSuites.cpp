@@ -56,16 +56,15 @@ void generateAllTouples(int factor,int level,int** touplesTable)
 			indexesTable[i][s] = s+(i*3);
 		}
 	}
-	
-	//TODO: I need the EXACT number of possible pairs given a factor and a level
 	//Now we will generate all possible 2-way pairings and assign them to the touplesTable array
-	for (int i=0; i<factor; i++) //Step through each factor once
+	for (int i=0; i<factor-1; i++) //Step through each factor except the final one
 	{
-		//Number of pairs left to cover for EACH level in a factor column:
-		//(level*(factor-1)) - (i*level)
-		for (int s=0; s<((level*(factor-1)) - (i*level)); s++) //Step through each level multiple times
+		for (int s=0; s<level; s++) //Step through each level in that factor
 		{
-			
+			for (int j=0; j<level*(factor-(i+1)); j++) //Step through each level in the factors to the right of the current level
+			{
+				
+			}
 		}
 	}
 	delete [] indexesTable;
@@ -107,8 +106,15 @@ int* generateBestSuite(int factor,int level)
 		bestSuite[s] = new int[ARRAY_SIZE];
 
 	//Create a 2 Dimensional Pointer array that will hold our touples
-	int toupleArraySize = 50;
+	int toupleArraySize = 0;
 	int coverageValue = 2; //Two-way coverage for now
+	
+	//Initialize touple Array Size
+	for (int i=1; i < factor; i++)
+		toupleArraySize+= ((factor-i)*level*level);
+
+	cout << endl << "Tuple Array Size of : " << toupleArraySize;
+	
 	int** touplesTable = new int*[toupleArraySize];
 	for (int s=0; s<toupleArraySize; s++)
 		touplesTable[s] = new int[coverageValue];
@@ -138,4 +144,3 @@ void main(int argc, _TCHAR* argv[])
 	delete [] bestSuite;
 	cin >> dummy; //Pause the script so I can read output
 }
-
