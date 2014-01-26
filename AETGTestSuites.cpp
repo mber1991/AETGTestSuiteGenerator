@@ -15,7 +15,7 @@ using namespace std;
 
 void fetchInput(int &factor, int &level);
 void generateAllTouples(int factor,int level,int** touplesTable);
-int** generateTestSuite(int factor, int level,int** touplesTable);
+TestCase** generateTestSuite(int factor, int level,int** touplesTable);
 int* generateBestSuite(int factor,int level);
 
 //Test Suite Array sizes until I optimize it.
@@ -73,7 +73,6 @@ void generateAllTouples(int factor,int level,int** touplesTable)
 					toupleIndex++;
 				}
 			}
-			cout << endl;
 		}
 	}
 	delete [] indexesTable;
@@ -83,20 +82,34 @@ void generateAllTouples(int factor,int level,int** touplesTable)
 	* Given Factor and level this generates One Test Suite
 	* And returns a pointer to it
 */
-int** generateTestSuite(int factor, int level, int** touplesTable)
+TestCase** generateTestSuite(int factor, int level, int** touplesTable)
 {
 	int RNGValue;
 	//Initialize a two dimensional pointer array to hold our suite
-	int** testSuite = new int*[ARRAY_SIZE];
-	for (int s=0; s < 20; s++)
-		testSuite[s] = new int[ARRAY_SIZE];
+	TestCase** testSuite = new TestCase*[ARRAY_SIZE];
+	for (int s=0; s < ARRAY_SIZE; s++)
+		testSuite[s] = new TestCase(factor);
 
 	//Single Test Case:
 		//1. Pick a Factor at random
 		//2. Pick another random Factor, choose a level that will cover the most pairs and break a tie with random decision
 		//3. Continue until you have selcted all factors
 	//If the picking of every factor's level generates no new covered pairs you are done.
-	RNGValue = rand() % 10 + 1;
+	//If the number of pairs covered by a test case is better replace the best case with that
+	//There are 50 test cases generated randomly
+	
+	int currentFactor;
+	TestCase newCase(factor);
+	TestCase bestCase(factor);
+
+	for (int i=0; i < 50; i++) //We will generate 50 test cases
+	{
+		//We have no factors yet so a random one will be chosen
+		currentFactor = rand()%factor;
+
+		//
+
+	}
 
 	return testSuite;
 }
@@ -140,16 +153,19 @@ void main(int argc, _TCHAR* argv[])
 {
 	int* bestSuite;
 	int factor,level,dummy;
+	time_t timeTaken;
 	fetchInput(factor,level);
 
 	srand(time(NULL)); //Seed our RNG
-	cout << rand();
-
+	timeTaken = time(NULL);
+	cout << timeTaken;
 	//for (int i=0; i < 100; i++) //We will run our script 100 times to get statistics
 	//{
 		bestSuite = generateBestSuite(factor, level);
 		//Math things to calculate time taken and average size
 	//}
+
+	cout << endl << "Calculation completed in " << time(NULL)-timeTaken << " seconds";
 	delete [] bestSuite;
 	cin >> dummy; //Pause the script so I can read output
 }
