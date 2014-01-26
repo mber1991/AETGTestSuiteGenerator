@@ -14,12 +14,13 @@
 using namespace std;
 
 void fetchInput(int &factor, int &level);
-void generateAllTouples(int factor,int level,int** touplesTable);
-TestCase** generateTestSuite(int factor, int level,int** touplesTable);
-int* generateBestSuite(int factor,int level);
+void generateAllTouples(int factor,int level,int** touplesTable, int** indexesTable);
+TestCase** generateTestSuite(int factor, int level,int** touplesTable, int** indexesTable);
+TestCase* generateBestSuite(int factor,int level);
 
 //Test Suite Array sizes until I optimize it.
 const int ARRAY_SIZE = 20;
+const int TESTCASE_SIZE = 50;
 
 /*
 	* Fetch the number of factors and levels and update integers by reference
@@ -40,24 +41,13 @@ void fetchInput(int &factor, int &level)
 	*so array[0] will be {0,1,2}
 	*
 	*Then it will create a 2 Dimensional array of every possible Touple and return it
-	*With size of (N X 2)
+	*With size of (N X 3)
+	*The third index will store the number of times that touple has been covered
 */
-void generateAllTouples(int factor,int level,int** touplesTable)
+void generateAllTouples(int factor,int level,int** touplesTable, int** indexesTable)
 {
 	int toupleIndex = 0; // Keep track of where I am in the touple array as im assigning numbers
-	int** indexesTable = new int*[factor];
-
-	//Create a 2 Dimensional Pointer array that will hold indexes for each Level in a factor
-	for (int s=0; s<factor; s++)
-		indexesTable[s] = new int[level];
-
-	for (int i=0; i<factor; i++)
-	{
-		for (int s=0; s<level; s++)
-		{
-			indexesTable[i][s] = s+(i*3);
-		}
-	}
+	
 	//Now we will generate all possible 2-way pairings and assign them to the touplesTable array
 	for (int i=0; i<factor-1; i++) //Step through each factor except the final one
 	{
@@ -75,20 +65,22 @@ void generateAllTouples(int factor,int level,int** touplesTable)
 			}
 		}
 	}
-	delete [] indexesTable;
 }
 
 /*
 	* Given Factor and level this generates One Test Suite
 	* And returns a pointer to it
 */
-TestCase** generateTestSuite(int factor, int level, int** touplesTable)
+TestCase** generateTestSuite(int factor, int level, int** touplesTable, int** indexesTable)
 {
-	int RNGValue;
 	//Initialize a two dimensional pointer array to hold our suite
 	TestCase** testSuite = new TestCase*[ARRAY_SIZE];
 	for (int s=0; s < ARRAY_SIZE; s++)
+	{
 		testSuite[s] = new TestCase(factor);
+		for (int i=0; i < factor; i++)
+			testSuite[s]->options[i] = -1;
+	}
 
 	//Single Test Case:
 		//1. Pick a Factor at random
@@ -99,59 +91,120 @@ TestCase** generateTestSuite(int factor, int level, int** touplesTable)
 	//There are 50 test cases generated randomly
 	
 	int currentFactor;
+	int lowestIndex,lowestValue; //Hold Indexes of current least covered pairs
+	
 	TestCase newCase(factor);
 	TestCase bestCase(factor);
 
-	for (int i=0; i < 50; i++) //We will generate 50 test cases
+	currentFactor = lowestIndex = lowestValue = -1; //0 is a valid entry so im picking something impossible for checking
+	
+	//We will use this coverage array to keep track of how many times each individual entry has been covered
+	int** coverageArray = new int*[factor];
+	for (int s=0; s<factor; s++)
+		coverageArray[s] = new int[level];
+
+	for (int i=0; i<factor; i++)
 	{
-		//We have no factors yet so a random one will be chosen
+		for (int s=0; s<level; s++)
+		{
+			coverageArray[i][s] = -1;
+		}
+	}
+
+	for (int i=0; i < TESTCASE_SIZE; i++) //We will generate 50 test cases
+	{
+		//Select a random factor
 		currentFactor = rand()%factor;
+		cout << endl << "FACTOR 1: " << currentFactor;
+		
+		/* FACTOR ONE */
+		//Iterate through list of current cases in testSuite (via looking at touplesTable array) and pick level that has least coverage so far
+		for (int j=0; j<level; j++)
+		{
+			if (coverageArray[currentFactor][j] < lowestValue || lowestValue == -1)
+			{
+				lowestValue = coverageArray[currentFactor][j];
+				lowestIndex = j;
+				coverageArray[currentFactor][j]+=1;
+			} else if (coverageArray[currentFactor][j] == lowestValue && (rand()%2 == 1)) //If there's a tie just break it randomly
+			{
+				lowestValue = coverageArray[currentFactor][j];
+				lowestIndex = j;
+			}
+		}
+		coverageArray[currentFactor][lowestIndex]+=1;
 
-		//
+		cout << "DEBUG FACTOR ONE SELECTED: " << lowestIndex << endl;
+		/* FACTOR TWO */
 
+		/* FACTOR THREE */
+
+		/* FACTOR FOUR */
 	}
 
 	return testSuite;
+
 }
 
 /*
 	*Given Factor and Level this will generate 50 Test Suites
 	*And return the smallest one.
 */
-int* generateBestSuite(int factor,int level)
+TestCase* generateBestSuite(int factor,int level)
 {
 	//Maximum suite will be assumed to be 20 x 20 for now
 	//TODO: Optimize array sizes
 	
-	int** bestSuite = new int*[ARRAY_SIZE]; //The Best Suite we have that will be returned
-	for (int s=0; s<ARRAY_SIZE; s++)
-		bestSuite[s] = new int[ARRAY_SIZE];
-
+	TestCase** bestSuite = new TestCase*[ARRAY_SIZE];
 	//Create a 2 Dimensional Pointer array that will hold our touples
 	int toupleArraySize = 0;
-	int coverageValue = 2; //Two-way coverage for now
 	
 	//Initialize touple Array Size
 	for (int i=1; i < factor; i++)
 		toupleArraySize+= ((factor-i)*level*level);
 
 	cout << endl << "Tuple Array Size of : " << toupleArraySize;
-	
+		
+	//Create a 2 Dimensional Pointer array that will hold indexes for each Level in a factor
+	int** indexesTable = new int*[factor];
+	for (int s=0; s<factor; s++)
+		indexesTable[s] = new int[level];
+
+	for (int i=0; i<factor; i++)
+	{
+		for (int s=0; s<level; s++)
+		{
+			indexesTable[i][s] = s+(i*3);
+		}
+	}
+
+	/*
+		*An array of Nx3 touples which will include:
+		*[0] Value level 1
+		*[1] Value level 2
+		*[2] Times this touple has been covered
+	*/
 	int** touplesTable = new int*[toupleArraySize];
 	for (int s=0; s<toupleArraySize; s++)
-		touplesTable[s] = new int[coverageValue];
+		touplesTable[s] = new int[3];
 
-	generateAllTouples(factor, level, touplesTable);
+	generateAllTouples(factor, level, touplesTable, indexesTable);
 
-	bestSuite = generateTestSuite(factor, level, touplesTable);
+	bestSuite = generateTestSuite(factor, level, touplesTable, indexesTable);
+
+	for (int i=0; i < toupleArraySize; i++)
+		delete [] touplesTable[i];
+	for (int i=0; i < factor; i++)
+		delete [] indexesTable[i];
 
 	delete [] touplesTable;
+	delete [] indexesTable;
 	return *bestSuite;
 }
 
 void main(int argc, _TCHAR* argv[])
 {
-	int* bestSuite;
+	TestCase* bestSuite;
 	int factor,level,dummy;
 	time_t timeTaken;
 	fetchInput(factor,level);
@@ -166,6 +219,5 @@ void main(int argc, _TCHAR* argv[])
 	//}
 
 	cout << endl << "Calculation completed in " << time(NULL)-timeTaken << " seconds";
-	delete [] bestSuite;
 	cin >> dummy; //Pause the script so I can read output
 }
